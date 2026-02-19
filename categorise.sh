@@ -14,12 +14,24 @@ require
 
 while IFS= read -r line; do
     if [ -n "$line" ]; then
+        # General Information
         id="$(jq -r '.id' <<<"$line")"
         type="$(jq -r '.type' <<<"$line")"
 
-        echo "id: $id"
-        echo "type: $type"
+        # Actor Information
+        actor_id="$(jq -r '.actor.id' <<<"$line")"
+        actor_name="$(jq -r '.actor.display_login' <<<"$line")"
+
+        # Repository Information
+        repo_id="$(jq -r '.repo.id' <<<"$line")"
+        repo_name="$(jq -r '.repo.name' <<<"$line")"
 
         echo "---"
+        echo "ID: $id"
+        echo "Type: $type"
+        echo "Actor ID: $actor_id"
+        echo "Actor Name: $actor_name"
+        echo "Repo ID: $repo_id"
+        echo "Repo Name: $repo_name"
     fi
 done < "$DATAFILE"
