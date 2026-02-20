@@ -36,6 +36,7 @@ while IFS= read -r line; do
         # General Information
         event_id="$(jq -r '.id' <<<"$line")"
         event_type="$(jq -r '.type' <<<"$line")"
+        event_timestamp="$(jq -r '.created_at' <<<"$line")"
 
         # Actor Information
         actor_id="$(jq -r '.actor.id' <<<"$line")"
@@ -48,6 +49,7 @@ while IFS= read -r line; do
         echo ""
         echo "Event ID: $event_id"
         echo "Event Type: $event_type"
+        echo "Event Timestamp: $event_timestamp"
         echo "Actor ID: $actor_id"
         echo "Actor Name: $actor_name"
         echo "Repo ID: $repo_id"
