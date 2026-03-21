@@ -36,6 +36,12 @@ push_count=$(echo "$counts" | grep '^PushEvent ' | cut -d' ' -f2)
 pr_count=$(echo "$counts" | grep '^PullRequestEvent ' | cut -d' ' -f2)
 other_count=$(echo "$counts" | grep -v '^PushEvent ' | grep -v '^PullRequestEvent ' | awk '{sum+=$2} END {print sum}')
 
+# Count bot vs human users
+total_events=$(jq -rs 'length' "$DATAFILE")
+bot_count=$(jq -rs '[.[] | select(.actor.login | contains("[bot]"))] | length' "$DATAFILE")
+human_count=$((total_events - bot_count))
+bot_ratio=$(awk "BEGIN {printf \"%.2f\", $bot_count / $human_count}")
+
 # Calculate ratio (as fraction)
 ratio=$(awk "BEGIN {printf \"%.2f\", $push_count / $pr_count}")
 
@@ -44,8 +50,12 @@ echo "PushEvent: $push_count"
 echo "PullRequestEvent: $pr_count"
 echo "Other: $other_count"
 echo "Ratio (PushEvent:PullRequestEvent) = $ratio:1"
+echo "---"
+echo "Bot users: $bot_count"
+echo "Human users: $human_count"
+echo "Ratio (Bot:Human) = $bot_ratio:1"
 
 # Update count for finish output
-count=$((push_count + pr_count + other_count))
+count=$total_events
 
 finish
