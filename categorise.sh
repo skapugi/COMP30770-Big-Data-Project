@@ -1,9 +1,8 @@
 #!/bin/bash
 
-# Data file to sort through
+# Data files to sort through
 DATAFILE="GitHubJanuary.json"
-
-# Run performed 2026-02-19 analysed 137019 entries, 2609799 ms elapsed time
+BOTFILE="bots.txt"
 
 # Ensure dependencies are present
 function checkDependencies() {
@@ -38,7 +37,12 @@ other_count=$(echo "$counts" | grep -v '^PushEvent ' | grep -v '^PullRequestEven
 
 # Count bot vs human users
 total_events=$(jq -rs 'length' "$DATAFILE")
-bot_count=$(jq -rs '[.[] | select(.actor.login | contains("[bot]"))] | length' "$DATAFILE")
+# Get all actor logins, find unique bot logins, then count their events
+all_logins=$(jq -rs '.[] | .actor.login' "$DATAFILE")
+# Get unique bot logins (combining bots.txt and [bot] pattern) - sorted and deduplicated
+unique_bot_logins=$( (echo "$all_logins" | grep -F -f $BOTFILE; echo "$all_logins" | grep '\[bot\]') | sort -u | grep -v '^$' )
+# Count events from bot accounts using grep -F with all unique bot logins at once
+bot_count=$(echo "$all_logins" | grep -F -f <(echo "$unique_bot_logins") -c)
 human_count=$((total_events - bot_count))
 bot_ratio=$(awk "BEGIN {printf \"%.2f\", $bot_count / $human_count}")
 
