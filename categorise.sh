@@ -28,35 +28,9 @@ function finish() {
 
 # Initialise counting variables
 time_start=$(date +%s%N)
-count=0
 
-# Parse Json
-while IFS= read -r line; do
-    if [ -n "$line" ]; then
-        # General Information
-        event_id="$(jq -r '.id' <<<"$line")"
-        event_type="$(jq -r '.type' <<<"$line")"
-        event_timestamp="$(jq -r '.created_at' <<<"$line")"
-
-        # Actor Information
-        actor_id="$(jq -r '.actor.id' <<<"$line")"
-        actor_name="$(jq -r '.actor.display_login' <<<"$line")"
-
-        # Repository Information
-        repo_id="$(jq -r '.repo.id' <<<"$line")"
-        repo_name="$(jq -r '.repo.name' <<<"$line")"
-
-        echo ""
-        echo "Event ID: $event_id"
-        echo "Event Type: $event_type"
-        echo "Event Timestamp: $event_timestamp"
-        echo "Actor ID: $actor_id"
-        echo "Actor Name: $actor_name"
-        echo "Repo ID: $repo_id"
-        echo "Repo Name: $repo_name"
-
-        ((count++))
-    fi
-done < "$DATAFILE"
+# Count entries first
+count=$(wc -l < "$DATAFILE")
+jq -r '"Event ID: \(.id)\nEvent Type: \(.type)\nEvent Timestamp: \(.created_at)\nActor ID: \(.actor.id)\nActor Name: \(.actor.display_login)\nRepo ID: \(.repo.id)\nRepo Name: \(.repo.name)\n"' "$DATAFILE"
 
 finish
