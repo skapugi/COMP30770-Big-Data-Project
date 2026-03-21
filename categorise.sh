@@ -29,8 +29,23 @@ function finish() {
 # Initialise counting variables
 time_start=$(date +%s%N)
 
-# Count entries first
-count=$(wc -l < "$DATAFILE")
-jq -r '"Event ID: \(.id)\nEvent Type: \(.type)\nEvent Timestamp: \(.created_at)\nActor ID: \(.actor.id)\nActor Name: \(.actor.display_login)\nRepo ID: \(.repo.id)\nRepo Name: \(.repo.name)\n"' "$DATAFILE"
+# Count event types in one pass using jq group_by (use -s for NDJSON)
+counts=$(jq -rs 'group_by(.type) | map({type: .[0].type, count: length}) | .[] | "\(.type) \(.count)"' "$DATAFILE")
+
+push_count=$(echo "$counts" | grep '^PushEvent ' | cut -d' ' -f2)
+pr_count=$(echo "$counts" | grep '^PullRequestEvent ' | cut -d' ' -f2)
+other_count=$(echo "$counts" | grep -v '^PushEvent ' | grep -v '^PullRequestEvent ' | awk '{sum+=$2} END {print sum}')
+
+# Calculate ratio (as fraction)
+ratio=$(awk "BEGIN {printf \"%.2f\", $push_count / $pr_count}")
+
+# Output results
+echo "PushEvent: $push_count"
+echo "PullRequestEvent: $pr_count"
+echo "Other: $other_count"
+echo "Ratio (PushEvent:PullRequestEvent) = $ratio:1"
+
+# Update count for finish output
+count=$((push_count + pr_count + other_count))
 
 finish
