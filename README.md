@@ -16,21 +16,14 @@ Second Tuesday of each even-numbered month in 2025:
 
 Raw data files are not stored in this repo. Run the scripts below to download and prepare them locally.
 
-### 1. Download hourly files
+### 1. Download necessary data
 
 ```bash
-bash download_data.sh
+bash getdata.sh
 ```
 
-Downloads 24 hourly `.json.gz` files per date (~144 files total) from GH Archive.
-
-### 2. Combine into daily files
-
-```bash
-bash combine_days.sh
-```
-
-Concatenates the 24 hourly files for each date into a single `YYYY-MM-DD.json.gz` file (~6 files, 0.1–2.7 GB each).
+Downloads 6 * 24 hourly 'json.gz' files per date from GH Archive.
+Data is then imported into a SQLite database, "analysis.db"
 
 ## Data format
 
