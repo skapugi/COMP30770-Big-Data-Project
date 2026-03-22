@@ -26,17 +26,18 @@ for date in $DATES; do
   echo "===== $date ====="
   time_start=$(date +%s%N)
 
-  # Count event types in one pass using jq group_by (use -s for NDJSON)
-  counts=$(gunzip -c "$DATAFILE" | jq -rs 'group_by(.type) | map({type: .[0].type, count: length}) | .[] | "\(.type) \(.count)"')
+  # Count event types using streaming (memory efficient)
+  counts=$(gunzip -c "$DATAFILE" | jq -r '.type' | sort | uniq -c)
 
-  push_count=$(echo "$counts" | grep '^PushEvent ' | cut -d' ' -f2)
-  pr_count=$(echo "$counts" | grep '^PullRequestEvent ' | cut -d' ' -f2)
-  other_count=$(echo "$counts" | grep -v '^PushEvent ' | grep -v '^PullRequestEvent ' | awk '{sum+=$2} END {print sum}')
+  push_count=$(echo "$counts" | grep 'PushEvent' | awk '{print $1}')
+  pr_count=$(echo "$counts" | grep 'PullRequestEvent' | awk '{print $1}')
+  other_count=$(echo "$counts" | grep -v 'PushEvent' | grep -v 'PullRequestEvent' | awk '{sum+=$1} END {print sum}')
 
-  # Count bot vs human users
-  total_events=$(gunzip -c "$DATAFILE" | jq -rs 'length')
-  # Get all actor logins, find unique bot logins, then count their events
-  all_logins=$(gunzip -c "$DATAFILE" | jq -rs '.[] | .actor.login')
+  # Count total events
+  total_events=$(gunzip -c "$DATAFILE" | wc -l)
+
+  # Get all actor logins using streaming
+  all_logins=$(gunzip -c "$DATAFILE" | jq -r '.actor.login')
   # Get unique bot logins (combining bots.txt and [bot] pattern) - sorted and deduplicated
   unique_bot_logins=$( (echo "$all_logins" | grep -F -f $BOTFILE; echo "$all_logins" | grep '\[bot\]') | sort -u | grep -v '^$' )
   # Count events from bot accounts using grep -F with all unique bot logins at once
