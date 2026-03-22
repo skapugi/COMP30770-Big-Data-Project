@@ -84,7 +84,7 @@ bot_count=$(sqlite3 "$DB" "
 
 total=$(sqlite3 "$DB" "SELECT COUNT(*) FROM events")
 human_count=$((total - bot_count))
-bot_ratio=$(echo "scale=2; $bot_count / $human_count" | bc)
+bot_ratio=$(printf '%.2f' $(echo "scale=4; $bot_count / $human_count" | bc))
 
 echo "Total: Bot=$bot_count | Human=$human_count | Bot:Human Ratio=$bot_ratio:1"
 

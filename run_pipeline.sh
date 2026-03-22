@@ -20,11 +20,14 @@ for date in $DATES; do
   fi
 done
 
+download_start=$(date +%s%N)
 if [ "$missing" -eq 1 ]; then
   bash getdata.sh
 else
   echo "All data files already present, skipping download."
 fi
+download_end=$(date +%s%N)
+download_time_ms=$(((download_end-download_start)/1000000))
 
 # Step 2: Import into SQLite if DB not already built
 echo ""
@@ -62,12 +65,21 @@ fi
 # Get analysis time from output
 analyse_time_ms=$(grep "^Elapsed time:" analysis_output.txt | awk '{print $3}')
 
+# Calculate processing time (import + analysis only, excludes download)
+if [[ "$import_time_ms" =~ ^[0-9]+$ ]] && [[ "$analyse_time_ms" =~ ^[0-9]+$ ]]; then
+  processing_time_ms=$((import_time_ms + analyse_time_ms))
+else
+  processing_time_ms="N/A"
+fi
+
 # Save performance summary
 echo "metric,value" > "$RESULTS"
+echo "download_time_ms,$download_time_ms" >> "$RESULTS"
 echo "import_time_ms,$import_time_ms" >> "$RESULTS"
 echo "import_peak_memory_bytes,$import_peak_mem" >> "$RESULTS"
 echo "analysis_time_ms,$analyse_time_ms" >> "$RESULTS"
 echo "analyse_peak_memory_bytes,$analyse_peak_mem" >> "$RESULTS"
+echo "processing_time_ms,$processing_time_ms" >> "$RESULTS"
 echo "total_pipeline_time_ms,$pipeline_elapsed_ms" >> "$RESULTS"
 
 # Append per-date event type results with total row
