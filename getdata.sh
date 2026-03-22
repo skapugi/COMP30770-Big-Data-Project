@@ -14,7 +14,10 @@ for date in $DATES; do
   # Download 24 hourly files sequentially
   echo "Downloading $date..."
   for hour in {0..23}; do
-    wget -nc -q "https://data.gharchive.org/${date}-${hour}.json.gz"
+    outfile="${date}-${hour}.json.gz"
+    if [ ! -f "$outfile" ]; then
+      curl -s -o "$outfile" "https://data.gharchive.org/${date}-${hour}.json.gz"
+    fi
   done
 
   # Concatenate into single daily file (gzip supports multi-stream)
