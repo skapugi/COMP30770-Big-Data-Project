@@ -13,7 +13,7 @@ with open("bots.txt") as f:
     bot_set = set(line.strip() for line in f if line.strip())
 bot_set_bc = sc.broadcast(bot_set)
 
-lines = sc.textFile("data/*.json")
+lines = sc.textFile("*.json.gz")
 
 def parse_jsons(line):
     decoder = json.JSONDecoder()

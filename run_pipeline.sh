@@ -42,9 +42,15 @@ fi
 
 # Step 3: Run analysis
 echo ""
-echo "===== STEP 3: Analysis ====="
+echo "===== STEP 3: SQL Analysis ====="
 /usr/bin/time -l bash analyse_sql.sh 2> analyse_memory.txt | tee analysis_output.txt
 analyse_peak_mem=$(grep "maximum resident set size" analyse_memory.txt | awk '{print $1}')
+
+# Step 4: Run Spark analysis
+echo ""
+echo "===== STEP 4: Spark Analysis ====="
+/usr/bin/time -l python analyse_spark.py 2> spark_analyse_memory.txt | tee spark_analysis_output.txt
+spark_analyse_peak_mem=$(grep "maximum resident set size" spark_analyse_memory.txt | awk '{print $1}')
 
 pipeline_end=$(date +%s%N)
 pipeline_elapsed_ms=$(((pipeline_end-pipeline_start)/1000000))
@@ -53,7 +59,8 @@ echo ""
 echo "===== PIPELINE COMPLETE ====="
 echo "Total pipeline time: $pipeline_elapsed_ms ms"
 echo "Import peak memory: $import_peak_mem bytes"
-echo "Analysis peak memory: $analyse_peak_mem bytes"
+echo "SQL Analysis peak memory: $analyse_peak_mem bytes"
+echo "Spark Analysis peak memory: $spark_analyse_peak_mem bytes"
 
 # Get import time
 if [ -f "import_time.txt" ]; then
@@ -64,6 +71,9 @@ fi
 
 # Get analysis time from output
 analyse_time_ms=$(grep "^Elapsed time:" analysis_output.txt | awk '{print $3}')
+
+# Get Spark analysis time from output
+spark_analyse_time_ms=$(grep "Total elapsed time:" spark_analysis_output.txt | awk '{print $4}')
 
 # Calculate processing time (import + analysis only, excludes download)
 if [[ "$import_time_ms" =~ ^[0-9]+$ ]] && [[ "$analyse_time_ms" =~ ^[0-9]+$ ]]; then
@@ -79,6 +89,8 @@ echo "import_time_ms,$import_time_ms" >> "$RESULTS"
 echo "import_peak_memory_bytes,$import_peak_mem" >> "$RESULTS"
 echo "analysis_time_ms,$analyse_time_ms" >> "$RESULTS"
 echo "analyse_peak_memory_bytes,$analyse_peak_mem" >> "$RESULTS"
+echo "spark_analysis_time_ms,$spark_analyse_time_ms" >> "$RESULTS"
+echo "spark_analyse_peak_memory_bytes,$spark_analyse_peak_mem" >> "$RESULTS"
 echo "processing_time_ms,$processing_time_ms" >> "$RESULTS"
 echo "total_pipeline_time_ms,$pipeline_elapsed_ms" >> "$RESULTS"
 
